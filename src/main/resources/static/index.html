@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Modern Calculator</title>
+
+    <style>
+
+        *{
+            margin:0;
+            padding:0;
+            box-sizing:border-box;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        body{
+            height:100vh;
+            display:flex;
+            justify-content:center;
+            align-items:center;
+            overflow:hidden;
+            background:#f5f5f5;
+            position:relative;
+        }
+
+        /* BACKGROUND BLOBS */
+
+        .blob1{
+            position:absolute;
+            width:500px;
+            height:500px;
+            background:#00d1b2;
+            left:-150px;
+            top:100px;
+            border-radius:45%;
+            filter:blur(10px);
+        }
+
+        .blob2{
+            position:absolute;
+            width:450px;
+            height:450px;
+            background:#8b7cf6;
+            right:-100px;
+            top:-100px;
+            border-radius:35%;
+            opacity:0.8;
+        }
+
+        .blob3{
+            position:absolute;
+            width:450px;
+            height:450px;
+            background:#ffe066;
+            right:-120px;
+            bottom:-180px;
+            border-radius:50%;
+            opacity:0.8;
+        }
+
+        /* CALCULATOR */
+
+        .calculator{
+            width:340px;
+            background:white;
+            padding:25px;
+            border-radius:10px;
+            box-shadow:0 20px 40px rgba(0,0,0,0.15);
+            position:relative;
+            z-index:10;
+        }
+
+        /* WINDOW DOTS */
+
+        .window-dots{
+            display:flex;
+            gap:8px;
+            margin-bottom:20px;
+        }
+
+        .dot{
+            width:10px;
+            height:10px;
+            border-radius:50%;
+            background:#dcdcdc;
+        }
+
+        /* DISPLAY */
+
+        .expression{
+            text-align:right;
+            color:#9ca3af;
+            font-size:16px;
+            margin-bottom:10px;
+            min-height:20px;
+        }
+
+        .display{
+            text-align:right;
+            font-size:58px;
+            color:#4b5563;
+            margin-bottom:25px;
+            font-weight:300;
+            overflow-x:auto;
+        }
+
+        /* BUTTON GRID */
+
+        .buttons{
+            display:grid;
+            grid-template-columns:repeat(4,1fr);
+            gap:16px;
+        }
+
+        button{
+            border:none;
+            width:60px;
+            height:60px;
+            border-radius:50%;
+            font-size:28px;
+            cursor:pointer;
+            background:#f3f4f6;
+            color:#374151;
+            transition:0.2s;
+        }
+
+        button:hover{
+            transform:scale(1.05);
+        }
+
+        .number{
+            background:white;
+        }
+
+        .operator{
+            background:#f3f4f6;
+        }
+
+        .equal{
+            background:#ff8f8f;
+            color:white;
+            height:140px;
+            border-radius:35px;
+            grid-row:span 2;
+            box-shadow:0 10px 20px rgba(255,143,143,0.4);
+        }
+
+        .zero{
+            grid-column:span 2;
+            width:100%;
+            border-radius:40px;
+        }
+
+        .error{
+            color:red;
+            text-align:center;
+            margin-top:15px;
+            font-size:14px;
+        }
+
+    </style>
+</head>
+
+<body>
+
+<div class="blob1"></div>
+<div class="blob2"></div>
+<div class="blob3"></div>
+
+<div class="calculator">
+
+    <div class="window-dots">
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+    </div>
+
+    <div class="expression" id="expression"></div>
+
+    <div class="display" id="display">0</div>
+
+    <div class="buttons">
+
+        <button class="operator" onclick="clearDisplay()">C</button>
+        <button class="operator" onclick="setOperation('add')">+</button>
+        <button class="operator" onclick="setOperation('divide')">/</button>
+        <button class="operator" onclick="setOperation('multiply')">×</button>
+
+        <button class="number" onclick="appendNumber(7)">7</button>
+        <button class="number" onclick="appendNumber(8)">8</button>
+        <button class="number" onclick="appendNumber(9)">9</button>
+
+        <button class="operator" onclick="setOperation('subtract')">−</button>
+
+        <button class="number" onclick="appendNumber(4)">4</button>
+        <button class="number" onclick="appendNumber(5)">5</button>
+        <button class="number" onclick="appendNumber(6)">6</button>
+
+        <button class="operator" onclick="setOperation('power')">^</button>
+
+        <button class="number" onclick="appendNumber(1)">1</button>
+        <button class="number" onclick="appendNumber(2)">2</button>
+        <button class="number" onclick="appendNumber(3)">3</button>
+
+        <button class="equal" onclick="calculate()">=</button>
+
+        <button class="number zero" onclick="appendNumber(0)">0</button>
+        <button class="number" onclick="appendDot()">.</button>
+
+    </div>
+
+    <div class="error" id="error"></div>
+
+</div>
+
+<script>
+
+    let firstValue = "";
+    let secondValue = "";
+    let operation = "";
+    let enteringSecond = false;
+
+    const display = document.getElementById("display");
+    const expression = document.getElementById("expression");
+    const error = document.getElementById("error");
+
+    function appendNumber(num){
+
+        if(!enteringSecond){
+            firstValue += num;
+            display.innerText = firstValue;
+        }else{
+            secondValue += num;
+            display.innerText = secondValue;
+        }
+    }
+
+    function appendDot(){
+
+        if(!enteringSecond){
+
+            if(!firstValue.includes(".")){
+                firstValue += ".";
+                display.innerText = firstValue;
+            }
+
+        }else{
+
+            if(!secondValue.includes(".")){
+                secondValue += ".";
+                display.innerText = secondValue;
+            }
+        }
+    }
+
+    function setOperation(op){
+
+        if(firstValue === "") return;
+
+        operation = op;
+        enteringSecond = true;
+
+        const symbolMap = {
+            add:"+",
+            subtract:"−",
+            multiply:"×",
+            divide:"÷",
+            power:"^"
+        };
+
+        expression.innerText =
+            `${firstValue} ${symbolMap[operation]}`;
+    }
+
+    function clearDisplay(){
+
+        firstValue = "";
+        secondValue = "";
+        operation = "";
+        enteringSecond = false;
+
+        display.innerText = "0";
+        expression.innerText = "";
+        error.innerText = "";
+    }
+
+    async function calculate(){
+
+        error.innerText = "";
+
+        if(firstValue === "" || secondValue === ""){
+            error.innerText = "Incomplete expression";
+            return;
+        }
+
+        try{
+
+            const response = await fetch(
+                `http://localhost:8080/api/v1/calculator/${operation}`,
+                {
+                    method:"POST",
+                    headers:{
+                        "Content-Type":"application/json"
+                    },
+                    body:JSON.stringify({
+                        a:Number(firstValue),
+                        b:Number(secondValue)
+                    })
+                }
+            );
+
+            if(!response.ok){
+
+                const err = await response.json();
+                throw new Error(err.message || "Calculation failed");
+            }
+
+            const data = await response.json();
+
+            display.innerText = data.result;
+            expression.innerText = data.expression;
+
+            firstValue = data.result.toString();
+            secondValue = "";
+            enteringSecond = false;
+
+        }catch(e){
+
+            error.innerText = e.message;
+        }
+    }
+
+</script>
+
+</body>
+</html>
